@@ -34,7 +34,7 @@ public class UserProfileDaoImpl extends AbstractDao<Integer, UserProfile> implem
     public List<UserProfile> findAll() {
         Criteria crit = createEntityCriteria();
         crit.addOrder(Order.asc("type"));
-        return (List<UserProfile>) crit.list();
+        return crit.list();
     }
 
 }

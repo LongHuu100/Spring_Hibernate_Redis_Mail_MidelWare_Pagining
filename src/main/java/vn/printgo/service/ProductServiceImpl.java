@@ -33,7 +33,7 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public RProduct findById(int id) {
 		
-		Product _prod = (Product) prodao.findById(id);
+		Product _prod = prodao.findById(id);
 		logger.info("_prod: {}", _prod);
 		if(_prod == null) return null;
 		

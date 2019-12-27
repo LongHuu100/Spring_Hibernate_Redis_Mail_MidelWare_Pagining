@@ -15,4 +15,4 @@ Nghĩa là khi một data được đẩy vào Redis thì Redis sẽ Broadcast �
 # Trong dự án Printgo có rất nhiều thứ nhưng tube này chủ yếu dành cho các bạn mới bắt đầu để làm quen với Java Spring.
 Các bạn quan tâm nhiều hơn về đa luồng, bất đồng bộ, promise, non blocking vui lòng email cho mình tại huu.long.100@gmail.com.
 
-# Đôi lời về hệ thống mô hình microservice và docker.
+# java -jar -Dlogging.config=conf/log4j2.xml Run.jar

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,8 +44,6 @@ public class UploadsController {
             ErrorData.SUCCESS, 
             ErrorData.getMessage(ErrorData.SUCCESS)
         );
-		logger.info("fileContents: {}", fileContent );
-		
 		String directory= ProductServiceImpl.dirUpload + amazonUtil.getFolderUpload(AmazonUtil.dateToInt());
 		
 		File f = new File(directory);
@@ -66,4 +65,19 @@ public class UploadsController {
 		
         return new ResponseEntity(_response, HttpStatus.OK);
     }
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@RequestMapping(value = "/rsync", method = RequestMethod.POST)
+	public ResponseEntity<?> UpFile(@RequestBody RsyncFile rsyncFile) {
+		logger.info("danhmuc: {}, dateCreated: {}", rsyncFile.danhmuc, rsyncFile.dateCreated);
+		logger.info("maDon: {}", rsyncFile.maDon);
+		return new ResponseEntity("OK", HttpStatus.OK);
+	}
+	
+	public static class RsyncFile {
+		public RsyncFile() {}
+		public String danhmuc;
+		public String dateCreated;
+		public String maDon;
+	}
 }

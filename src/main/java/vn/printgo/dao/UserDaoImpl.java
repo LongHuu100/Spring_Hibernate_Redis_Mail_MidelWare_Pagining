@@ -4,6 +4,7 @@ package vn.printgo.dao;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -41,8 +42,8 @@ public class UserDaoImpl extends AbstractDao<Integer, User> implements UserDao {
     @Override
     public List<User> findAllUsers() {
         Criteria criteria = createEntityCriteria().addOrder(Order.asc("firstName"));
-        criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);//To avoid duplicates.
-        List<User> users = (List<User>) criteria.list();
+        criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);//To avoid duplicates.
+        List<User> users = criteria.list();
 
         // No need to fetch userProfiles since we are not showing them on list page. Let them lazy load. 
         // Uncomment below lines for eagerly fetching of userProfiles if you want.

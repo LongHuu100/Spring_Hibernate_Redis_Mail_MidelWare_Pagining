@@ -18,7 +18,7 @@ public class CategoryDaoImpl extends AbstractDao<Integer, Category> implements C
 	
 	@Override
 	public Category findById(int id) {
-		return (Category) getByKey(id);
+		return getByKey(id);
 	}
 
 	@Override

@@ -4,4 +4,8 @@
 .classpath
 target
 .DS_Store
-
+logs
+cdrs
+Run_lib
+Run.jar
+uploads
