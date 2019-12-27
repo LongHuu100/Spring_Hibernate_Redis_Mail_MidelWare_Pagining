@@ -1,8 +1,12 @@
 
 package vn.printgo.security;
 
+import vn.printgo.entities.RList;
 import vn.printgo.jwt.JwtAuthTokenFilter;
 import vn.printgo.service.UserDetailsServiceImpl;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -58,9 +62,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .passwordEncoder(passwordEncoder());
     }
     
-    @Override // Author phan quyen nguoi dung.
+	@SuppressWarnings("rawtypes")
+	@Override // Author phan quyen nguoi dung.
     protected void configure(HttpSecurity http) throws Exception {
-
+    	
         http.cors().and().csrf().disable().authorizeRequests()
         .antMatchers("/auth/**").permitAll()
         .antMatchers("/email/**").permitAll()
@@ -70,7 +75,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .antMatchers("/static-file/**").permitAll()
         .anyRequest().authenticated()
         .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-
+        
+        http.exceptionHandling().authenticationEntryPoint((request, response, e) -> {
+            response.setContentType("application/json;charset=UTF-8");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write(new RList(403, "Request is not permistion").toJson());
+        });
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
  

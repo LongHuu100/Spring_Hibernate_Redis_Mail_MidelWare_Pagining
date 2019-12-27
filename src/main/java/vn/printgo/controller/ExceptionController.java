@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import javax.servlet.ServletException;
 
 @ControllerAdvice // Exception cho tat ca cac controller text html
 public class ExceptionController {
@@ -70,14 +69,9 @@ public class ExceptionController {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	@ExceptionHandler(value = {
-		NoHandlerFoundException.class,
-		ServletException.class
-	})
-    @ResponseBody
-    public ResponseEntity<ErrorData> handleErrorRunTime(NoHandlerFoundException e) {
-        RList _rList = new RList(404, e.getMessage());
-        logger.error("handleErrorRunTime --> {}", e);
-        return new ResponseEntity(_rList, HttpStatus.UNPROCESSABLE_ENTITY);
+	@ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<RList> unhandledPath(final NoHandlerFoundException e) {
+    	RList _rList = new RList(404, e.getMessage());
+        return new ResponseEntity(_rList, HttpStatus.METHOD_NOT_ALLOWED);
     }
 }

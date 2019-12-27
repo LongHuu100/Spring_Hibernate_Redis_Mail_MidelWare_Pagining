@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
@@ -30,8 +29,7 @@ import vn.printgo.redis.RedisPublisherImpl;
 @SpringBootApplication(scanBasePackages = "vn.printgo")
 @EnableAutoConfiguration(exclude = {
     SecurityAutoConfiguration.class,
-    HibernateJpaAutoConfiguration.class,
-    ErrorMvcAutoConfiguration.class
+    HibernateJpaAutoConfiguration.class
 })
 @PropertySource(value = {
 	"file:conf/application.properties",
