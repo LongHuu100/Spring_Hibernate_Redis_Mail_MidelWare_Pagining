@@ -19,8 +19,10 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
-import vn.printgo.components.WatchFile;
 import vn.printgo.redis.IRedisPublisher;
 import vn.printgo.redis.RedisMessageListener;
 import vn.printgo.redis.RedisPublisherImpl;
@@ -44,7 +46,6 @@ public class CrmApplication extends SpringBootServletInitializer {
 
     public static void main(String[] args) throws InterruptedException {
         SpringApplication.run(CrmApplication.class, args);
-        new Thread(new WatchFile()).start();
     }
     
     @Bean
@@ -53,7 +54,23 @@ public class CrmApplication extends SpringBootServletInitializer {
         redisStandaloneConfiguration.setPassword(RedisPassword.of(""));
         return new JedisConnectionFactory(redisStandaloneConfiguration);
     }
-
+    
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
+    
     @Bean
     RedisTemplate< String, Object > redisTemplate() {
         final RedisTemplate< String, Object > template =  new RedisTemplate< String, Object >();

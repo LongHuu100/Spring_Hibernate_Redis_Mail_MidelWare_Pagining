@@ -5,6 +5,9 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
@@ -15,11 +18,18 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import vn.printgo.components.MediaTypeUtils;
+import vn.printgo.entities.ErrorData;
+import vn.printgo.entities.RList;
+import vn.printgo.model.TmpFile;
+import vn.printgo.service.TmpFileService;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 
 @Controller
@@ -33,6 +43,9 @@ public class StaticFileController {
     
     @Autowired
 	private Environment environment;
+    
+    @Autowired
+	private TmpFileService tmpFileService;
     
 	@GetMapping(value = {"/", ""})
     public void SendFile(
@@ -58,7 +71,7 @@ public class StaticFileController {
         BufferedInputStream inStream = new BufferedInputStream(new FileInputStream(file));
         BufferedOutputStream outStream = new BufferedOutputStream(resonse.getOutputStream());
  
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[2048];
         int bytesRead = 0;
         while ((bytesRead = inStream.read(buffer)) != -1) {
             outStream.write(buffer, 0, bytesRead);
@@ -66,4 +79,40 @@ public class StaticFileController {
         outStream.flush();
         inStream.close();
     }
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@GetMapping(value = {"/get-by-name"})
+	@ResponseBody
+    public ResponseEntity<?> GetByName(
+    		HttpServletResponse resonse,
+    		@RequestParam(value="file-name") String fileName) {
+		List<TmpFile> tmpFile = tmpFileService.findLikeName(fileName);
+
+		RList<TmpFile> _response = new RList<TmpFile>(
+            ErrorData.SUCCESS, 
+            ErrorData.getMessage(ErrorData.SUCCESS)
+		);
+		
+		_response.setData(tmpFile);
+        
+        return new ResponseEntity(_response, HttpStatus.OK);
+	}
+	
+	@GetMapping(value = {"/preview"})
+	public ResponseEntity<byte[]> viewOnBrowser(
+		@RequestParam(value="file-name") String fileName) throws IOException {
+		String pathFile = environment.getProperty("amazon.static.file") + "/" + fileName;
+        File file = new File(pathFile);
+        if(!file.isFile()) return null;
+        
+        MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, fileName);
+        final HttpHeaders headers = new HttpHeaders();
+       
+	    headers.setContentType(mediaType.getType().equals("application") ? MediaType.APPLICATION_PDF : MediaType.IMAGE_PNG);
+        return new ResponseEntity<byte[]>(
+    		Files.readAllBytes(file.toPath()), 
+    		headers, 
+    		HttpStatus.CREATED
+	    );
+	}
 }
