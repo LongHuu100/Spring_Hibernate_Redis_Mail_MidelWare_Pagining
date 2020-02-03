@@ -7,11 +7,13 @@ package vn.printgo.service;
 
 import java.util.List;
 
+import vn.printgo.entities.RTmpFile;
 import vn.printgo.model.TmpFile;
 
 public interface TmpFileService {
 	TmpFile findByName(String name);
     void save(TmpFile tmpFile);
     void deleteByName(String name);
-    List<TmpFile> findLikeName(String name);
+    List<RTmpFile> findLikeName(String name);
+    TmpFile findLikeNameMd5(String name);
 }

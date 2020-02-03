@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import vn.printgo.model.TmpFile;
 import vn.printgo.service.TmpFileService;
@@ -25,10 +26,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -56,16 +54,10 @@ public class RecursiWatcherService {
         startRecursiveWatcher();
     }
 
-    @PreDestroy
-    public void cleanup() {
-        try {
-            watcher.close();
-        } catch (IOException e) {
-            LOG.error("Error closing watcher service", e);
-        }
-        executor.shutdown();
+    private String md5File(String fN) {
+    	return DigestUtils.md5DigestAsHex(fN.getBytes());
     }
-
+  
     @SuppressWarnings("unchecked")
 	private void startRecursiveWatcher() throws IOException {
         LOG.info("Starting Recursive Watcher");
@@ -87,7 +79,7 @@ public class RecursiWatcherService {
                     }
                 });
             } catch (IOException e) {
-                throw new RuntimeException("Error registering path " + p);
+            	LOG.error("Error registering path " + p);
             }
         };
 
@@ -117,34 +109,40 @@ public class RecursiWatcherService {
                         register.accept(absPath);
                     } else {
                         final File f = absPath.toFile();
-                        String[] array = ( f.getAbsolutePath( )).split("/");
-		            	if(array.length > 2) {
-		            		String danhmuc = array[array.length - 3];
-			            	String dateCreated = array[array.length - 2];
-			            	String fileName = array[array.length - 1];
-			            	if(!fileName.startsWith(".") && f.isFile()) {
-			            		cdrFile.info(f.getAbsolutePath());
-			            		LOG.info("danhmuc: " + danhmuc + ", dateCreated: " + dateCreated + ", fileName: " + fileName);
-			            		TmpFile tmpFile = tmpFileService.findByName(fileName);
-			            		if(tmpFile == null) {
-			            			TmpFile _tmpFile = new TmpFile();
-			            			_tmpFile.setName(fileName);
-			            			_tmpFile.setPath(f.getAbsolutePath());
-			            			tmpFileService.save(_tmpFile);
-			            		}
-			            	} else {
-			            		LOG.info("delete danhmuc: " + danhmuc + ", dateCreated: " + dateCreated + ", fileName: " + fileName);
-			            		tmpFileService.deleteByName(fileName);
-			            	}
-			            }
+                        LOG.info("absPath: " + f.getAbsolutePath() );
+                        saveFile(f);
                     }
                 });
 
                 boolean valid = key.reset();
                 if (!valid) {
-                    break;
+                	LOG.error("Error key.reset " + valid);
                 }
             }
         });
+    }
+    
+    private void saveFile(File f) {
+    	LOG.info("absPath: " + f.getAbsolutePath() );
+    	String[] array = ( f.getAbsolutePath( )).split("/");
+		if(array.length <= 2) return;
+		String danhmuc = array[array.length - 3];
+		String dateCreated = array[array.length - 2];
+		String fileName = array[array.length - 1];
+		if(!fileName.startsWith(".") && f.isFile() && !fileName.contains("filepart")) {
+			cdrFile.info(f.getAbsolutePath());
+			LOG.info("danhmuc: " + danhmuc + ", dateCreated: " + dateCreated + ", fileName: " + fileName);
+			TmpFile tmpFile = tmpFileService.findByName(fileName);
+			if(tmpFile == null) {
+				TmpFile _tmpFile = new TmpFile();
+				_tmpFile.setName(fileName);
+				_tmpFile.setPath(f.getAbsolutePath());
+				_tmpFile.setNameMd(md5File(fileName));
+				tmpFileService.save(_tmpFile);
+			}
+		} else if (!fileName.contains("filepart")) {
+			LOG.info("delete danhmuc: " + danhmuc + ", dateCreated: " + dateCreated + ", fileName: " + fileName);
+			tmpFileService.deleteByName(fileName);
+		}
     }
 }

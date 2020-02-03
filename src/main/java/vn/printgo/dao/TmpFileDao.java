@@ -10,4 +10,5 @@ public interface TmpFileDao {
     void save(TmpFile tmpFile);
     void deleteByName(String name);
     List<TmpFile> findLikeName(String name);
+    TmpFile findLikeNameMd5(String name);
 }

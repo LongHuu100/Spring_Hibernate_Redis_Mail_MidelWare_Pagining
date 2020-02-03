@@ -16,10 +16,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -36,17 +35,15 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
  
     @RequestMapping(value = "/signin", method = RequestMethod.POST)
-    public ResponseEntity<?> authenticateUser(
-            @RequestParam(value="username") String username,
-            @RequestParam(value="password") String password) {
+    public ResponseEntity<?> authenticateUser( @RequestBody LoginForm loginForm) {
  
-        String passEncoder = passwordEncoder.encode(password);
-        logger.info("username:" + username + "|passEncoder:" + passEncoder);
+        String passEncoder = passwordEncoder.encode(loginForm.password);
+        logger.info("username:" + loginForm.username + "|passEncoder:" + passEncoder);
 
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
-                username,
-                password
+        		loginForm.username,
+        		loginForm.password
             )
         );
         String jwt = jwtProvider.generateJwtToken(authentication);
@@ -78,6 +75,11 @@ public class AuthController {
         }
         
         return ResponseEntity.ok(_rc);
+    }
+    
+    public static class LoginForm {
+    	public String username;
+    	public String password;
     }
     
     public static class RToken {

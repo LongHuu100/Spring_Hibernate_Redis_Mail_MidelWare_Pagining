@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import vn.printgo.components.MediaTypeUtils;
 import vn.printgo.entities.ErrorData;
 import vn.printgo.entities.RList;
+import vn.printgo.entities.RTmpFile;
 import vn.printgo.model.TmpFile;
 import vn.printgo.service.TmpFileService;
 
@@ -42,9 +42,6 @@ public class StaticFileController {
     private ServletContext servletContext;
     
     @Autowired
-	private Environment environment;
-    
-    @Autowired
 	private TmpFileService tmpFileService;
     
 	@GetMapping(value = {"/", ""})
@@ -52,19 +49,20 @@ public class StaticFileController {
     		HttpServletResponse resonse,
     		@RequestParam(value="file-name") String fileName) throws IOException {
 		
+		TmpFile find = tmpFileService.findLikeNameMd5(fileName);
+		if(find == null) return;
+		
 		MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, fileName);
         
-        File file = new File(environment.getProperty("amazon.static.file") + "/" + fileName);
-        logger.info("file path: {}", file.getAbsolutePath());
+        // File file = new File(environment.getProperty("amazon.static.file") + "/" + fileName);
+		logger.info("file path: {}", find.getPath() );
+		File file = new File( find.getPath() );
         if(!file.isFile()) return;
         
         // Content-Type
-        // application/pdf
         resonse.setContentType(mediaType.getType());
- 
         // Content-Disposition
         resonse.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());
- 
         // Content-Length
         resonse.setContentLength((int) file.length());
  
@@ -80,15 +78,23 @@ public class StaticFileController {
         inStream.close();
     }
 	
+	@GetMapping(value = {"/mode-check"})
+	@ResponseBody
+	public String modeCheck(@RequestParam(value="file-name") String fileName) {
+		TmpFile chekF = tmpFileService.findLikeNameMd5(fileName);
+		logger.info("chekF: {}", chekF);
+		return chekF != null ? "OK" : "SR";
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@GetMapping(value = {"/get-by-name"})
 	@ResponseBody
     public ResponseEntity<?> GetByName(
     		HttpServletResponse resonse,
     		@RequestParam(value="file-name") String fileName) {
-		List<TmpFile> tmpFile = tmpFileService.findLikeName(fileName);
+		List<RTmpFile> tmpFile = tmpFileService.findLikeName(fileName);
 
-		RList<TmpFile> _response = new RList<TmpFile>(
+		RList<RTmpFile> _response = new RList<RTmpFile>(
             ErrorData.SUCCESS, 
             ErrorData.getMessage(ErrorData.SUCCESS)
 		);
@@ -101,8 +107,11 @@ public class StaticFileController {
 	@GetMapping(value = {"/preview"})
 	public ResponseEntity<byte[]> viewOnBrowser(
 		@RequestParam(value="file-name") String fileName) throws IOException {
-		String pathFile = environment.getProperty("amazon.static.file") + "/" + fileName;
-        File file = new File(pathFile);
+		
+		TmpFile find = tmpFileService.findLikeNameMd5(fileName);
+		if(find == null) return null;
+		
+        File file = new File( find.getPath());
         if(!file.isFile()) return null;
         
         MediaType mediaType = MediaTypeUtils.getMediaTypeForFileName(this.servletContext, fileName);

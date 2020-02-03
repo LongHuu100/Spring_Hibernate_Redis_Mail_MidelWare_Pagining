@@ -46,4 +46,12 @@ public class TmpFileDaoImpl extends AbstractDao<Integer, TmpFile> implements Tmp
 		List<TmpFile> lTmp = session.createQuery(QUERY).setString("fName", name + "%").list();
 		return lTmp;
 	}
+	
+	public TmpFile findLikeNameMd5(String fileName) {
+		Criteria crit = createEntityCriteria();
+        crit.add(Restrictions.eq("nameMd", fileName));
+        TmpFile tmpFile = (TmpFile) crit.uniqueResult();
+        logger.info("tmpFile: {}", tmpFile);
+		return tmpFile;
+	}
 }
